@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Zap, Clock, Plus } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import HowItWorks from '../components/HowItWorks';
 
 const faqs = [
   {
@@ -74,6 +75,9 @@ export default function Home() {
             </Link>
           </div>
         </div>
+
+        {/* How It Works Section */}
+        <HowItWorks />
 
         {/* Feature Badges */}
         <div className="mt-24 grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl w-full border-t border-slate-200 pt-12 text-center">
