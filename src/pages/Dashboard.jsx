@@ -1,12 +1,31 @@
-import { useState } from 'react';
-import { UploadCloud, FileText, CheckCircle2, Play } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { UploadCloud, FileText, CheckCircle2, Play, History, Loader2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import axios from 'axios';
 
 export default function Dashboard() {
   const [file, setFile] = useState(null);
   const [jobDescription, setJobDescription] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [hasAnalysis, setHasAnalysis] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
+  const fetchHistory = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('http://localhost:5000/api/analyze/history', {
+        headers: { 'x-auth-token': token }
+      });
+      setHistory(res.data);
+    } catch (err) {
+      console.error('Error fetching history:', err);
+    }
+  };
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -14,15 +33,31 @@ export default function Dashboard() {
     }
   };
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!file || !jobDescription) return;
     
     setIsAnalyzing(true);
-    // Simulate analysis delay
-    setTimeout(() => {
+    setError('');
+    
+    const formData = new FormData();
+    formData.append('resume', file);
+    formData.append('jobDescription', jobDescription);
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.post('http://localhost:5000/api/analyze', formData, {
+        headers: { 
+          'Content-Type': 'multipart/form-data',
+          'x-auth-token': token 
+        }
+      });
+      setAnalysisResult(res.data);
+      fetchHistory(); // Refresh history
+    } catch (err) {
+      setError(err.response?.data?.msg || 'Error analyzing resume');
+    } finally {
       setIsAnalyzing(false);
-      setHasAnalysis(true);
-    }, 2000);
+    }
   };
 
   return (
@@ -115,7 +150,9 @@ export default function Dashboard() {
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full">
             <h2 className="text-lg font-semibold text-slate-800 mb-4">Analysis Results</h2>
             
-            {!hasAnalysis ? (
+            {error && <p className="mb-4 text-red-500 text-sm bg-red-50 p-3 rounded-lg border border-red-100">{error}</p>}
+            
+            {!analysisResult ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-slate-100 rounded-xl bg-slate-50">
                 <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mb-4">
                   <CheckCircle2 className="w-8 h-8 text-slate-400" />
@@ -127,43 +164,55 @@ export default function Dashboard() {
               <div className="flex-1 space-y-6">
                 <div className="flex items-center justify-between p-4 bg-green-50 border border-green-100 rounded-xl">
                   <div>
-                    <h3 className="text-green-800 font-semibold text-lg">85% Match Score</h3>
-                    <p className="text-green-600 text-sm">Strong fit for this role</p>
+                    <h3 className="text-green-800 font-semibold text-lg">{analysisResult.jobMatchScore}% Match Score</h3>
+                    <p className="text-green-600 text-sm">ATS Score: {analysisResult.atsScore}%</p>
                   </div>
                   <div className="relative w-16 h-16 flex items-center justify-center bg-white rounded-full border-[4px] border-green-400">
-                     <span className="text-green-600 font-bold">85</span>
+                     <span className="text-green-600 font-bold">{analysisResult.jobMatchScore}</span>
                   </div>
                 </div>
 
                 <div className="space-y-3">
-                  <h3 className="font-medium text-slate-800">Key Strengths</h3>
+                  <h3 className="font-medium text-slate-800 flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    Key Strengths
+                  </h3>
                   <ul className="space-y-2">
-                    <li className="flex gap-2 text-sm text-slate-600">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                      Strong experience with React and modern frontend frameworks.
-                    </li>
-                    <li className="flex gap-2 text-sm text-slate-600">
-                      <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                      Demonstrated leadership in agile team environments.
-                    </li>
+                    {analysisResult.strengths.map((s, i) => (
+                      <li key={i} className="flex gap-2 text-sm text-slate-600">
+                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 mt-1.5 shrink-0"></div>
+                        {s}
+                      </li>
+                    ))}
                   </ul>
                 </div>
 
                 <div className="space-y-3">
-                  <h3 className="font-medium text-slate-800">Areas for Improvement</h3>
+                  <h3 className="font-medium text-slate-800 flex items-center gap-2">
+                    <History className="w-4 h-4 text-blue-500" />
+                    Missing Skills
+                  </h3>
                   <ul className="space-y-2">
-                    <li className="flex gap-2 text-sm text-slate-600">
-                      <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-                        <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                      </div>
-                      Highlight more measurable achievements (e.g., % increase in performance).
-                    </li>
-                    <li className="flex gap-2 text-sm text-slate-600">
-                      <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
-                        <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                      </div>
-                      Missing keywords: "GraphQL", "Tailwind CSS". Consider adding if applicable.
-                    </li>
+                    {analysisResult.missingSkills.map((s, i) => (
+                      <li key={i} className="flex gap-2 text-sm text-slate-600">
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0"></div>
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="font-medium text-slate-800">AI Suggestions</h3>
+                  <ul className="space-y-2">
+                    {analysisResult.suggestions.map((s, i) => (
+                      <li key={i} className="flex gap-2 text-sm text-slate-600">
+                        <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
+                          <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                        </div>
+                        {s}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               </div>
@@ -171,6 +220,40 @@ export default function Dashboard() {
           </div>
 
         </div>
+
+        {/* History Section */}
+        {history.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <History className="w-6 h-6" />
+              Recent Analyses
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {history.map((item) => (
+                <div 
+                  key={item._id} 
+                  className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between hover:border-primary/30 transition-colors cursor-pointer"
+                  onClick={() => setAnalysisResult(item)}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-slate-500" />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-slate-800 truncate max-w-[150px]">{item.fileName}</h4>
+                      <p className="text-xs text-slate-500">{new Date(item.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-lg font-bold text-primary">{item.jobMatchScore}%</span>
+                    <p className="text-[10px] text-slate-400 uppercase font-semibold">Match</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );

@@ -1,19 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, UserPlus } from 'lucide-react';
+import { ArrowLeft, LogIn } from 'lucide-react';
 import axios from 'axios';
 
-export default function Signup() {
+export default function Signin() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
     email: '',
     password: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { name, email, password } = formData;
+  const { email, password } = formData;
 
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,7 +22,7 @@ export default function Signup() {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/signup', formData);
+      const res = await axios.post('http://localhost:5000/api/auth/signin', formData);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data.user));
       navigate('/dashboard');
@@ -46,15 +45,15 @@ export default function Signup() {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-          <UserPlus className="w-8 h-8 text-primary" />
+          <LogIn className="w-8 h-8 text-primary" />
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">
-          Create an Account
+          Log In to Your Account
         </h2>
         <p className="mt-2 text-center text-sm text-slate-600">
           Or{' '}
-          <Link to="/signin" className="font-medium text-primary hover:text-primary-dark transition-colors">
-            log in to your existing account
+          <Link to="/signup" className="font-medium text-primary hover:text-primary-dark transition-colors">
+            create a new account
           </Link>
         </p>
       </div>
@@ -63,25 +62,6 @@ export default function Signup() {
         <div className="bg-white py-8 px-4 shadow-xl shadow-slate-200/50 sm:rounded-2xl sm:px-10 border border-slate-100">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-slate-700">
-                Full Name
-              </label>
-              <div className="mt-1">
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  required
-                  value={name}
-                  onChange={onChange}
-                  className="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm transition-shadow"
-                  placeholder="John Doe"
-                />
-              </div>
-            </div>
-
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700">
                 Email address
@@ -102,23 +82,6 @@ export default function Signup() {
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-slate-700">
-                Phone Number
-              </label>
-              <div className="mt-1">
-                <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  required
-                  className="appearance-none block w-full px-4 py-3 border border-slate-300 rounded-xl shadow-sm placeholder-slate-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm transition-shadow"
-                  placeholder="+1 (555) 000-0000"
-                />
-              </div>
-            </div>
-
-            <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-700">
                 Password
               </label>
@@ -127,7 +90,7 @@ export default function Signup() {
                   id="password"
                   name="password"
                   type="password"
-                  autoComplete="new-password"
+                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={onChange}
@@ -143,7 +106,7 @@ export default function Signup() {
                 disabled={loading}
                 className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all hover:-translate-y-0.5 disabled:bg-slate-300"
               >
-                {loading ? 'Creating Account...' : 'Create Account'}
+                {loading ? 'Logging in...' : 'Log In'}
               </button>
             </div>
           </form>

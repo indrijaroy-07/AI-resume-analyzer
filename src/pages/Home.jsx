@@ -68,7 +68,7 @@ export default function Home() {
               Get Started for Free
             </Link>
             <Link 
-              to="/signup" 
+              to="/signin" 
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-white text-slate-700 font-medium hover:bg-slate-50 border border-slate-200 transition-all hover:-translate-y-0.5"
             >
               Log In
